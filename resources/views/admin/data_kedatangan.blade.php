@@ -1,12 +1,17 @@
 @extends('layouts.master')
-@section('title', 'Kedatangan')
 
+@push('headcss')
+    <link
+        href="https://cdn.datatables.net/v/bs5/jszip-2.5.0/dt-1.13.3/b-2.3.5/b-colvis-2.3.5/b-html5-2.3.5/b-print-2.3.5/datatables.min.css"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css">
+@endpush
 @section('content')
     <style>
         .dataTables_wrapper {
-            margin-top: 10px;
+            margin-top: 20px;
             margin-right: 20px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             margin-left: 20px;
         }
     </style>
@@ -83,170 +88,177 @@
             </table>
         </div>
     </div>
+    @push('script')
+        {{-- dataTable --}}
+        <script src="https://cdn.datatables.net/v/bs5/dt-1.13.3/datatables.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+        <script
+            src="https://cdn.datatables.net/v/bs5/jszip-2.5.0/dt-1.13.3/b-2.3.5/b-colvis-2.3.5/b-html5-2.3.5/b-print-2.3.5/datatables.min.js">
+        </script>
+        <script>
+            $('.reload').click(function() {
+                location.reload();
+            });
 
-    <script>
-        $('.reload').click(function() {
-            location.reload();
-        });
+            $(document).ready(function() {
+                var dataTable = $('#data_table').DataTable({
+                    dom: "<'row'<'col-lg-4 mb-1'l><'col-lg-5 mb-1 text-center'B><'col-lg-3'f>>" +
+                        "<'row'<'col-sm-12 py-lg-2'tr>>" +
+                        "<'row'<'col-sm-12 col-lg-5'i><'col-sm-12 col-lg-7'p>>",
+                    responsive: true,
+                    buttons: [
+                        'copy',
+                        {
+                            extend: 'excel',
+                            text: 'Excel',
+                            exportOptions: {
+                                columns: [0, 1, 2, 3, 4, 5, 6]
+                            }
+                        },
+                        {
+                            extend: 'print',
+                            text: 'Print',
+                            exportOptions: {
+                                columns: [0, 1, 2, 3, 4, 5, 6]
+                            }
+                        },
+                    ],
 
-        $(document).ready(function() {
-            var dataTable = $('#data_table').DataTable({
-                dom: "<'row'<'col-lg-4 mb-1'l><'col-lg-5 mb-1 text-center'B><'col-lg-3'f>>" +
-                    "<'row'<'col-sm-12 py-lg-2'tr>>" +
-                    "<'row'<'col-sm-12 col-lg-5'i><'col-sm-12 col-lg-7'p>>",
-                responsive: true,
-                buttons: [
-                    'copy',
-                    {
-                        extend: 'excel',
-                        text: 'Excel',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6]
+                    initComplete: function() {
+                        $('.dataTables_wrapper .btn').css('margin', '1px');
+                    },
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ route('admin.kedatangan') }}",
+                        data: function(d) {
+                            d.filter = $('#filter').val();
+                            d.start_date = $('#start_date').val();
+                            d.end_date = $('#end_date').val();
                         }
                     },
-                    {
-                        extend: 'print',
-                        text: 'Print',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6]
-                        }
-                    },
-                ],
 
-                initComplete: function() {
-                    $('.dataTables_wrapper .btn').css('margin', '1px');
-                },
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ route('admin.kedatangan') }}",
-                    data: function(d) {
-                        d.filter = $('#filter').val();
-                        d.start_date = $('#start_date').val();
-                        d.end_date = $('#end_date').val();
+                    columns: [{
+                            data: 'DT_RowIndex',
+                            name: '#',
+                            searchable: false
+                        },
+                        {
+                            data: 'departure_date',
+                            name: 'departure_date'
+                        },
+                        {
+                            data: 'rute',
+                            name: 'rute'
+                        },
+                        {
+                            data: 'bus',
+                            name: 'bus'
+                        },
+                        {
+                            data: 'id_driver',
+                            name: 'id_driver'
+                        },
+                        {
+                            data: 'kondektur',
+                            name: 'kondektur',
+                        },
+                        {
+                            data: 'total_passenger',
+                            name: 'total_passenger',
+                        },
+                        {
+                            data: 'status',
+                            name: 'status',
+                        },
+                        {
+                            data: 'opsi',
+                            name: 'opsi',
+                            orderable: false,
+                            searchable: false
+                        },
+                    ]
+                });
+
+                function checkInput() {
+                    if ($('#start_date').val() === '' || $('#end_date').val() === '') {
+                        $('#btnFilter').prop('disabled', true);
+                        $('#btnFilter').addClass('bg-secondary');
+                    } else {
+                        $('#btnFilter').prop('disabled', false);
+                        $('#btnFilter').removeClass('bg-secondary');
                     }
-                },
+                }
+                checkInput(); // mengecek input kosong pada awal halaman dimuat
+                $('#start_date, #end_date').on('input', function() {
+                    checkInput(); // mengecek input kosong pada event listener
+                });
 
-                columns: [{
-                        data: 'DT_RowIndex',
-                        name: '#',
-                        searchable: false
-                    },
-                    {
-                        data: 'departure_date',
-                        name: 'departure_date'
-                    },
-                    {
-                        data: 'rute',
-                        name: 'rute'
-                    },
-                    {
-                        data: 'bus',
-                        name: 'bus'
-                    },
-                    {
-                        data: 'id_driver',
-                        name: 'id_driver'
-                    },
-                    {
-                        data: 'kondektur',
-                        name: 'kondektur',
-                    },
-                    {
-                        data: 'total_passenger',
-                        name: 'total_passenger',
-                    },
-                    {
-                        data: 'status',
-                        name: 'status',
-                    },
-                    {
-                        data: 'opsi',
-                        name: 'opsi',
-                        orderable: false,
-                        searchable: false
-                    },
-                ]
+                $('#filter').change(function() {
+                    dataTable.draw();
+                    if ($(this).val() != null) {
+                        $('#start_date').prop('disabled', true);
+                        $('#end_date').prop('disabled', true);
+                        $('#start_date').val('');
+                        $('#end_date').val('');
+                        $('#btnFilter').prop('disabled', true);
+                        $('#btnFilter').addClass('bg-secondary');
+                    } else {
+                        $('#start_date').prop('disabled', false);
+                        $('#end_date').prop('disabled', false);
+                        $('#btnFilter').prop('disabled', false);
+                    }
+                });
+
+
+                $('#btnFilter').click(function() {
+                    dataTable.draw();
+                });
+
+                $('#search').on('keyup change', function() {
+                    dataTable.search($('#search').val()).draw();
+                    $('#btnFilter').trigger('click'); // Trigger event click pada tombol filter
+                });
             });
 
-            function checkInput() {
-                if ($('#start_date').val() === '' || $('#end_date').val() === '') {
-                    $('#btnFilter').prop('disabled', true);
-                    $('#btnFilter').addClass('bg-secondary');
-                } else {
-                    $('#btnFilter').prop('disabled', false);
-                    $('#btnFilter').removeClass('bg-secondary');
-                }
+            function financial_save(id) {
+                swal({
+                    title: "Pastikan data sudah benar!",
+                    text: "Data yang sudah di input ke Laporan Keuangan tidak akan bisa di Ubah/Edit lagi   !",
+                    icon: "info",
+                    buttons: true,
+                    buttons: ["Batal", "OK, Saya mengerti"],
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            type: 'POST',
+                            url: '{{ route('financial_tiket_save') }}',
+                            data: {
+                                id: id,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            dataType: "json",
+                            success: function(response) {
+                                swal({
+                                    title: "Success!",
+                                    text: 'Data berhasil ditambahkan ke Laporan Keuangan',
+                                    icon: "success",
+                                    buttons: false,
+                                    timer: 1000
+                                }).then(function() {
+                                    $('#data_table').DataTable().ajax.reload();
+                                });
+                            },
+                            error: function(xhr, ajaxOptions, thrownError) {
+                                swal("Oops...", "Terjadi kesalahan saat mengupdate data!", "error");
+                                console.log(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                            }
+                        });
+                    }
+                });
             }
-            checkInput(); // mengecek input kosong pada awal halaman dimuat
-            $('#start_date, #end_date').on('input', function() {
-                checkInput(); // mengecek input kosong pada event listener
-            });
-
-            $('#filter').change(function() {
-                dataTable.draw();
-                if ($(this).val() != null) {
-                    $('#start_date').prop('disabled', true);
-                    $('#end_date').prop('disabled', true);
-                    $('#start_date').val('');
-                    $('#end_date').val('');
-                    $('#btnFilter').prop('disabled', true);
-                    $('#btnFilter').addClass('bg-secondary');
-                } else {
-                    $('#start_date').prop('disabled', false);
-                    $('#end_date').prop('disabled', false);
-                    $('#btnFilter').prop('disabled', false);
-                }
-            });
-
-
-            $('#btnFilter').click(function() {
-                dataTable.draw();
-            });
-
-            $('#search').on('keyup change', function() {
-                dataTable.search($('#search').val()).draw();
-                $('#btnFilter').trigger('click'); // Trigger event click pada tombol filter
-            });
-        });
-
-        function financial_save(id) {
-            swal({
-                title: "Pastikan data sudah benar!",
-                text: "Data yang sudah di input ke Laporan Keuangan tidak akan bisa di Ubah/Edit lagi   !",
-                icon: "info",
-                buttons: true,
-                buttons: ["Batal", "OK, Saya mengerti"],
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        type: 'POST',
-                        url: '{{ route('financial_tiket_save') }}',
-                        data: {
-                            id: id,
-                            _token: '{{ csrf_token() }}'
-                        },
-                        dataType: "json",
-                        success: function(response) {
-                            swal({
-                                title: "Success!",
-                                text: 'Data berhasil ditambahkan ke Laporan Keuangan',
-                                icon: "success",
-                                buttons: false,
-                                timer: 1000
-                            }).then(function() {
-                                // $('#data_table').DataTable().ajax.reload();
-                            });
-                        },
-                        error: function(xhr, ajaxOptions, thrownError) {
-                            swal("Oops...", "Terjadi kesalahan saat mengupdate data!", "error");
-                            console.log(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-                        }
-                    });
-                }
-            });
-        }
-    </script>
-
+        </script>
+    @endpush
 @endsection

@@ -1,12 +1,28 @@
 @extends('layouts.master')
-@section('title', 'Persenan Gaji')
-{{-- @section('submenu', 'show') --}}
+
+@section('title')
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <h2 class="page-title">
+                        Persenan Gaji Driver
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="/pimpinan/persenan-gaji-add" class="btn btn-info ">Tambah
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
 
 @section('content')
-    <div class="my-2">
-        <a href="persenan-gaji-add" class="btn btn-info">Tambah</a>
-    </div>
-
     @if (Session::has('status'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ Session::get('message') }}
@@ -35,12 +51,14 @@
                             <td>{{ $row->sopir_utama }}%</td>
                             <td>{{ $row->sopir_bantu }}%</td>
                             <td>
-                                <a class="btn-sm btn-info" href="/pimpinan/driver/persenan-info"><i
-                                        class="fa-solid fa-circle-info"></i></a>
-                                <a class="btn-sm btn-primary" href="/pimpinan/persenan-gaji-edit/{{ $row->id }}"><i
-                                        class="fa-solid fa-pen-to-square"></i></a>
-                                <a class="btn-sm btn-danger" href="/pimpinan/driver/persenan-delete/{{ $row->id }}"><i
-                                        class="fa-solid fa-trash-can"></i></a>
+                                {{-- <a class=" btn btn-sm btn-icon btn-info" href="/pimpinan/driver/persenan-info">
+                                    <i class="fa-solid fa-circle-info"></i></a> --}}
+                                <a class="btn btn-sm btn-icon btn-primary"
+                                    href="/pimpinan/persenan-gaji-edit/{{ $row->id }}">
+                                    <i class="fa-solid fa-pen-to-square"></i></a>
+                                <a class="btn btn-sm btn-icon btn-danger"
+                                    href="/pimpinan/driver/persenan-delete/{{ $row->id }}">
+                                    <i class="fa-solid fa-trash-can"></i></a>
                                 {{-- <a href="/pimpinan/ubah-persenan-gaji" class="btn btn-info mt-3">Ubah</a> --}}
                             </td>
                         </tr>
@@ -49,6 +67,4 @@
             </table>
         </div>
     </div>
-
-
 @endsection

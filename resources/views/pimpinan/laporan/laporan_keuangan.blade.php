@@ -1,9 +1,6 @@
 @extends('layouts.master')
-@section('title', 'Laporan Keuangan')
-{{-- @section('submenu', 'show') --}}
 
 @section('content')
-
     <div class="my-2">
         <button class="btn btn-info add">Add</button>
     </div>

@@ -1,6 +1,5 @@
 @extends('layouts.master')
-@section('title', ' Data Armada Bus')
-@section('submenu', 'show')
+
 
 @section('content')
     <div class="my-2">
@@ -35,12 +34,12 @@
                             <td>{{ $row->bus_seats }}</td>
                             <td>{{ $row->description }}</td>
                             <td>
-                                <a class="btn-sm btn-info" href="/admin/bus-info/{{ $row->id }}"><i
-                                        class="fa-solid fa-circle-info"></i></a>
-                                <a class="btn-sm btn-primary" href="/admin/bus-edit/{{ $row->id }}"><i
-                                        class="fa-solid fa-pen-to-square"></i></a>
-                                <a class="btn-sm btn-danger" href="/admin/bus-delete/{{ $row->id }}"><i
-                                        class="fa-solid fa-trash-can"></i></a>
+                                <a class="btn btn-icon btn-sm  btn-info" href="/admin/bus-info/{{ $row->id }}">
+                                    <i class="fa-solid fa-circle-info"></i></a>
+                                <a class="btn btn-icon btn-sm  btn-primary" href="/admin/bus-edit/{{ $row->id }}">
+                                    <i class="fa-solid fa-pen-to-square"></i></a>
+                                <a class="btn btn-icon btn-sm  btn-danger" href="/admin/bus-delete/{{ $row->id }}">
+                                    <i class="fa-solid fa-trash-can"></i></a>
                             </td>
                         </tr>
                     @endforeach
@@ -48,5 +47,4 @@
             </table>
         </div>
     </div>
-
 @endsection

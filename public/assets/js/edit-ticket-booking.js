@@ -15,6 +15,12 @@ function formatRupiah(angka) {
 }
 
 $(document).ready(function () {
+    $("#bus_seats").select2({
+        placeholder: " Pilih Kursi",
+    });
+});
+
+$(document).ready(function () {
     $("#update").on("click", function () {
         // $("#update").addClass("d-none");
         // $("#loading").removeClass("d-none");
@@ -43,9 +49,10 @@ $(document).ready(function () {
         if (!payment_methods) {
             var payment_methods = $("#payment_methods").val();
         }
-        // var departure_code = $("#tiket_departure_code").val();
+        var old_departure_code = $("#tiket_departure_code").val();
         // var departure_code = $("#id_bus").val().split("/")[4];
         var departure_code = $("#id_bus").val();
+
         if (departure_code == null) {
             var departure_code = $("#tiket_departure_code").val();
         } else {
@@ -75,9 +82,11 @@ $(document).ready(function () {
                 customers_address: customers_address,
                 payment_methods: payment_methods,
                 departure_code: departure_code,
+                old_departure_code: old_departure_code,
             },
             dataType: "json",
             success: function (response) {
+                console.log(response);
                 if (response.errors) {
                     $("#process").removeClass("d-none");
                     $("#loading").addClass("d-none");
@@ -98,7 +107,6 @@ $(document).ready(function () {
                         buttons: false,
                         timer: 1000,
                     });
-
                     setTimeout(function () {
                         window.location.replace("/admin/data-pemesanan-tiket");
                     }, 1000);
@@ -404,11 +412,5 @@ $(document).ready(function () {
 
     $("#tiket_costumers_address").on("input", function () {
         $("#customers_address").val($(this).val());
-    });
-});
-
-$(document).ready(function () {
-    $("#bus_seats").select2({
-        placeholder: " Pilih Kursi",
     });
 });

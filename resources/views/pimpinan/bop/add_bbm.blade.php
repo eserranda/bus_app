@@ -1,9 +1,19 @@
 @extends('layouts.master')
-@section('title', 'Pembelian BBM')
-@section('submenu', 'show')
+@section('title')
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        Tambah BOP BBM
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
 
 @section('content')
-
     <div class="col-xl-8 col-md-6">
         <div class="card">
             <form action="/pimpinan/bbm-save" class="row g-3 m-2" method="POST">
@@ -49,36 +59,37 @@
         </div>
     </div>
 
+    @push('script')
+        <script>
+            $(document).ready(function() {
+                function formatRupiah(angka) {
+                    var number_string = angka.toString().replace(/[^,\d]/g, ''),
+                        split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-    <script>
-        $(document).ready(function() {
-            function formatRupiah(angka) {
-                var number_string = angka.toString().replace(/[^,\d]/g, ''),
-                    split = number_string.split(','),
-                    sisa = split[0].length % 3,
-                    rupiah = split[0].substr(0, sisa),
-                    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
+                    }
 
-                if (ribuan) {
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return rupiah;
                 }
 
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return rupiah;
-            }
+                $('#total_harga').on('input', function() {
+                    $(this).val(function(index, value) {
+                        return formatRupiah(value.replace(/\D/g, ''));
+                    });
+                });
 
-            $('#total_harga').on('input', function() {
-                $(this).val(function(index, value) {
-                    return formatRupiah(value.replace(/\D/g, ''));
+                $('#add').click(function() {
+                    var priceVal = $('#total_harga').val();
+                    var numericPrice = priceVal.replace(/\D/g, '');
+                    $('#total_harga').val(numericPrice);
                 });
             });
-
-            $('#add').click(function() {
-                var priceVal = $('#total_harga').val();
-                var numericPrice = priceVal.replace(/\D/g, '');
-                $('#total_harga').val(numericPrice);
-            });
-        });
-    </script>
+        </script>
+    @endpush
 @endsection

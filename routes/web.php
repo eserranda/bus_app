@@ -209,7 +209,7 @@ Route::controller(JadwalTiketController::class)->group(function () {
     Route::post('admin/jadwal-tiket-save', 'store');
     Route::get('admin/jadwal-tiket-edit/{id}', 'edit');
     Route::put('admin/jadwal-tiket-update/{id}', 'update');
-    Route::get('admin/jadwal-tiket-delete/{id}', 'delete');
+    Route::delete('admin/jadwal-tiket-delete/{id}', 'destroy')->name('jadwal.tiket.delete');
 });
 
 Route::controller(RuteController::class)->group(function () {
@@ -220,8 +220,6 @@ Route::controller(RuteController::class)->group(function () {
     Route::put('admin/rute-update/{id}', 'update');
     Route::get('admin/rute-delete/{id}', 'delete');
 });
-
-
 
 Route::get('admin/add-bus', function () {
     return view('admin.add_bus');

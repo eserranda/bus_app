@@ -12,7 +12,7 @@ class GajiDriver extends Model
     use HasFactory;
 
     protected $table = 'gaji_driver';
-    protected $fillable = ['to_city', 'kode_gaji', 'down_payment', 'from_city', 'date', 'id_driver', 'driver_type', 'salary', 'status'];
+    protected $fillable = ['to_city', 'kode_gaji', 'departure_code', 'down_payment', 'from_city', 'date', 'id_driver', 'driver_type', 'salary', 'status'];
 
 
     public function driver()

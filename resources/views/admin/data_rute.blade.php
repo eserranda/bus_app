@@ -1,6 +1,4 @@
 @extends('layouts.master')
-@section('title', ' Data Rute')
-@section('submenu', 'show')
 
 @section('content')
     <div class="my-2">
@@ -39,5 +37,4 @@
             </table>
         </div>
     </div>
-
 @endsection

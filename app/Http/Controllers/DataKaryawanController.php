@@ -96,11 +96,15 @@ class DataKaryawanController extends Controller
     public function update(Request $request, DataKaryawan $dataKaryawan, $id)
     {
         $update = DataKaryawan::findOrFail($id);
+
         $update->update($request->all());
 
         if ($update) {
             Session::flash('status', 'success');
+        }else{
+            Session::flash('error', 'error');
         }
+
         return redirect('pimpinan/data-karyawan');
     }
 

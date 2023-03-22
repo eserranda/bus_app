@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Rute;
 use App\Models\GajiDriver;
+use App\Models\PanjarDriver;
 use Illuminate\Http\Request;
 use App\Models\LaporanKeuangan;
-use App\Models\PanjarDriver;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class GajiDriverController extends Controller
@@ -21,8 +22,8 @@ class GajiDriverController extends Controller
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
 
-            $query = GajiDriver::select('id', 'date', 'kode_gaji', 'to_city', 'from_city', 'id_driver', 'driver_type', 'salary', 'down_payment', 'status')
-                ->orderBy('date', 'asc');
+            $query = GajiDriver::select('*')
+                ->orderBy('status', 'asc');
 
             if (isset($status)) {
                 if ($status === 'all_data') {
@@ -56,7 +57,7 @@ class GajiDriverController extends Controller
                         'id_driver' => $data->driver->fullname . " / " .  $data->driver->driver_type,
                         'rute'      => $data->from_city . " - " . $data->to_city,
                         'salary'    => $data->salary,
-                        'status'    => $data->status,
+                        'status'           => $data->status,
                         'nilai_status'     => $nilai_status
                     ];
                 });
@@ -65,12 +66,12 @@ class GajiDriverController extends Controller
                 ->addIndexColumn()
                 ->addColumn('opsi', function ($row) {
                     if ($row['nilai_status'] == 0) {
-                        $actionBtn = '<a class="btn btn-info btn-sm" onclick="ambil_gaji(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(3)\').text(),$(this).closest(\'tr\').find(\'td:eq(5)\').text())">Ambil Gaji</a>';
+                        $actionBtn = '<a class="btn btn-info" onclick="ambil_gaji(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(3)\').text(),$(this).closest(\'tr\').find(\'td:eq(5)\').text())">Ambil Gaji</a>';
 
-                        $actionBtn .= '<a class="btn btn-light text-danger btn-sm" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(3)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
+                        $actionBtn .= '<a class="btn btn-light text-danger btn-icon mx-1" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(3)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
                         return $actionBtn;
                     } elseif ($row['nilai_status'] == 1) {
-                        $actionBtn = '<a class="btn btn-light text-primary btn-sm financial-save"  onclick="financial_save(\'' . $row['id'] . '\')"><i  class="fa-solid fa-file-medical"></i></a>';
+                        $actionBtn = '<a class="btn btn-light text-primary btn-icon financial-save"  onclick="financial_save(\'' . $row['id'] . '\')"><i  class="fa-solid fa-file-medical"></i></a>';
                         return $actionBtn;
                     } else {
                         $actionBtn = '<span class="badge text-bg-warning">Arsip</span>';
@@ -240,30 +241,30 @@ class GajiDriverController extends Controller
         $driver_name = $get_data->driver->fullname;
         $debet       = $get_data->salary;
 
-        $total_saldo = LaporanKeuangan::latest('created_at')->first();
+        $dateformat = Carbon::createFromFormat('Y-m-d', $date)->format('d-m-Y');
+        $date_today = Carbon::today();
 
+        $total_saldo = LaporanKeuangan::latest('created_at')->first();
         $total_debet = $total_saldo->total_dana - $debet;
 
-        $insert_data = LaporanKeuangan::create([
-            'date'           =>  $date,
-            'kode_transaksi' =>  $kode,
-            'keterangan'     =>  "Pengambilan Gaji $driver_name Tanggal $date",
-            'debet'         =>  $debet,
-            'total_dana'     =>  $total_debet,
-        ]);
-
-        $get_data->update([
-            'status' => 2,  //status 2 berarti telah di input ke laopran keuangan
-        ]);
-
-
-        if ($insert_data && $get_data) {
+        try {
+            DB::beginTransaction();
+            LaporanKeuangan::create([
+                'date'           =>  $date_today,
+                'kode_transaksi' =>  $kode,
+                'keterangan'     =>  "Pengambilan Gaji $driver_name Tanggal $dateformat",
+                'debet'          =>  $debet,
+                'total_dana'     =>  $total_debet,
+            ]);
+            $get_data->update([
+                'status' => 2,  //status 2 berarti telah di input ke laopran keuangan
+            ]);
+            DB::commit();
             return response()->json(['sukses' => 'Data Berhasil di simpan']);
-        } else {
-            return response()->json(['Gagal' => 'Terjadi Kesalahan'], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['error' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
         }
-
-        // return redirect('pimpinan/perawatan-armada')->with('status', 'Data berhasil di update!');
     }
 
     public function destroy($id)

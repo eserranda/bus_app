@@ -31,9 +31,6 @@ class KeberangkatanController extends Controller
         $seats_merged = array_merge(...$seats->toArray());
         $total_seats = count($seats_merged);
 
-
-
-
         return view('admin.data_keberangkatan', ['listKeberangkatan' => $keberangkatan], ['total' => $total_seats]);
     }
 }

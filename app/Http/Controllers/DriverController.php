@@ -41,8 +41,8 @@ class DriverController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('opsi', function ($row) {
-                    $actionBtn = '<a class="btn btn-light text-danger btn-sm" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(1)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
-                    $actionBtn .= '<a class="btn btn-light text-dark btn-sm" href="/pimpinan/driver-edit/' . $row['id'] . '"><i class="fa-solid fa-pen-to-square"></i></a>';
+                    $actionBtn = '<a class="btn btn-light text-danger btn-icon btn-sm" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(1)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
+                    $actionBtn .= '<a class="btn btn-light text-dark btn-icon btn-sm" href="/pimpinan/driver-edit/' . $row['id'] . '"><i class="fa-solid fa-pen-to-square"></i></a>';
                     return $actionBtn;
                 })
                 ->rawColumns(['opsi', 'status'])
@@ -95,6 +95,6 @@ class DriverController extends Controller
             return response()->json(['Gagal' => 'Terjadi kesalahan saat menghapus data'], 404);
         }
 
-        return redirect('admin/data-driver');
+        // return redirect('admin/data-driver');
     }
 }

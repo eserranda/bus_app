@@ -7,11 +7,12 @@ use App\Models\Bus;
 use App\Models\Rute;
 use App\Models\Drivers;
 use App\Models\JadwalTiket;
-use App\Models\Keberangkatan;
-use App\Models\TransaksiTiket;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
+use App\Models\Keberangkatan;
+use App\Models\Tiket;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class JadwalTiketController extends Controller
 
@@ -45,12 +46,13 @@ class JadwalTiketController extends Controller
             } elseif (isset($start_date) && isset($end_date)) {
                 $query->whereBetween('departure_date', [$start_date, $end_date]);
             } else {
-                $query->where('departure_date', $today);
+                $query->where('departure_date', $today)
+                    ->orderBy('status', 'ASC');
             }
             $data = $query->get()
                 ->map(function ($data) {
                     $data->departure_date = Carbon::createFromFormat('Y-m-d', $data->departure_date)->format('d-m-Y');
-                    $data->total_price = 'Rp' . number_format($data->total_price, 0, ',', '.');
+                    $data->price = 'Rp' . number_format($data->price, 0, ',', '.');
                     // if ($data->status == 1) {
                     //     $status = '<span class="badge text-bg-warning">Berangkat</span>';
                     // } elseif ($data->status == 2) {
@@ -58,27 +60,60 @@ class JadwalTiketController extends Controller
                     // } elseif ($data->status == null) {
                     //     $status =  '';
                     // }
-                    // $nilai_status =  $data->status;
+                    $nilai_status =  $data->status;
+
+                    if ($data->sopir_utama == null) {
+                        $sopir_utama = '-';
+                    } else {
+                        $sopir_utama =  $data->driver->fullname;
+                    };
+                    if ($data->sopir_bantu == null) {
+                        $sopir_bantu = '-';
+                    } else {
+                        $sopir_bantu =  $data->sopirBantu->fullname;
+                    };
+                    if ($data->kondektur == null) {
+                        $kondektur = '-';
+                    } else {
+                        $kondektur =  $data->Kondektur->fullname;
+                    };
                     return [
                         'id'              => $data->id,
+                        'departure_code'  => $data->departure_code,
                         'departure_date'  => $data->departure_date,
                         'bus'             => $data->bus->type . " | " . $data->bus->plat,
                         'rute'            => $data->from_city . " - " . $data->to_city,
-                        'id_driver'       => $data->driver->fullname,
-                        'sopir_bantu'     => $data->sopirBantu->fullname,
-                        'kondektur'       => $data->Kondektur->fullname,
+                        'sopir_utama'     => $sopir_utama,
+                        'sopir_bantu'     => $sopir_bantu,
+                        'kondektur'       => $kondektur,
                         'price'           => $data->price,
-                        // 'nilai_status'    => $nilai_status
+                        'nilai_status'    => $nilai_status
                     ];
                 });
 
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('opsi', function ($row) {
-                    $actionBtn =  '<a class="btn btn-light text-primary btn-sm" href="/admin/jadwal-tiket-edit/' . $row['id'] . '">
+                    // $actionBtn =  '<a class="btn btn-info btn-icon  btn-sm" href="/admin/jadwal-tiket-edit/' . $row['id'] . '">
+                    // <i class="fa-solid fa-pen-to-square"></i></a>';
+                    // $actionBtn .= '<a class="btn btn-danger btn-icon btn-sm" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(1)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
+                    // // $actionBtn .= '<a class="btn btn-danger btn-icon btn-sm" href="/admin/jadwal-tiket-delete/' . $row['id'] . '"> <i class="fa-solid fa-trash-can"></i></a>';
+                    // return $actionBtn;
+                    if ($row['nilai_status'] == 0) {
+                        $actionBtn =  '<a class="btn btn-info btn-icon  btn-sm" href="/admin/jadwal-tiket-edit/' . $row['id'] . '">
                     <i class="fa-solid fa-pen-to-square"></i></a>';
-                    // $actionBtn .= '<a class="btn btn-light text-danger btn-sm" href="/admin/jadwal-tiket-delete/' . $row['id'] . '"> <i class="fa-solid fa-trash-can"></i></a>';
-                    return $actionBtn;
+                        $actionBtn .= '<a class="btn btn-danger btn-icon btn-sm mx-1" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(1)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
+                        return $actionBtn;
+                    } elseif ($row['nilai_status'] == 1) {
+                        $actionBtn = '<span class="badge text-bg-secondary">Bus Berangkat</span>';
+                        return $actionBtn;
+                    } elseif ($row['nilai_status'] == 2) {
+                        $actionBtn = '<span class="badge text-bg-info">Telah tiba</span>';
+                        return $actionBtn;
+                    } elseif ($row['nilai_status'] == 3) {
+                        $actionBtn = '<span class="badge text-bg-warning">Arsip</span>';
+                        return $actionBtn;
+                    }
                 })
                 ->rawColumns(['opsi'])
                 ->make(true);
@@ -160,7 +195,7 @@ class JadwalTiketController extends Controller
             'price'          => request('price'),
         ]);
 
-        $keberangkatan = Keberangkatan::create([
+        Keberangkatan::create([
             'departure_code' => $departure_code,
             'departure_date' => request('departure_date'),
             'departure_time' => request('departure_time'),
@@ -189,8 +224,8 @@ class JadwalTiketController extends Controller
         $data_sopir_bantu   = $edit->sopir_bantu;
         $data_kondektur     = $edit->kondektur;
 
-        $utama     = "Utama";
-        $bantu     = "Bantu";
+        $utama      = "Utama";
+        $bantu      = "Bantu";
         $kondekturs = "Kondektur";
 
         $bus  = Bus::where('id', '!=', $data_id)->get();
@@ -236,53 +271,107 @@ class JadwalTiketController extends Controller
 
     public function update(Request $request, $id)
     {
-        $update = JadwalTiket::findOrFail($id);
-
         $price =  request('price');
 
         $data_price = str_replace('.', '', $price);
 
-        $update->update([
-            'price'          => $data_price,
-            'departure_date' =>  request('departure_date'),
-            'id_bus'         =>  request('id_bus'),
-            'from_city'      =>  request('from_city'),
-            'to_city'        =>  request('to_city'),
-            'sopir_utama'    =>  request('sopir_utama'),
-            'sopir_bantu'    =>  request('sopir_bantu'),
-            'kondektur'      =>  request('kondektur'),
-        ]);
+        $update_jadwal_tiket = JadwalTiket::find($id);
 
-        // $update->update($request->all());
+        $departure_code = $update_jadwal_tiket->departure_code;
 
-        if ($update) {
+        $update_data_tiket    = Tiket::where('departure_code', $departure_code);
+        $update_keberangkatan = Keberangkatan::where('departure_code', $departure_code);
+        // $update_old_dcode     = Keberangkatan::where('departure_code', request('old_departure_code'));
+
+        try {
+            DB::beginTransaction();
+
+            $update_data_tiket->update([
+                'date'           =>  request('departure_date'),
+                'departure_time' =>  request('departure_time'),
+                'bus'            =>  request('id_bus'),
+                'from_city'      =>  request('from_city'),
+                'to_city'        =>  request('to_city'),
+            ]);
+
+            $update_keberangkatan->update([
+                'departure_date' =>  request('departure_date'),
+                'departure_time' =>  request('departure_time'),
+                'id_bus'         =>  request('id_bus'),
+                'from_city'      =>  request('from_city'),
+                'to_city'        =>  request('to_city'),
+                'sopir_utama'    =>  request('sopir_utama'),
+                'sopir_bantu'    =>  request('sopir_bantu'),
+                'kondektur'      =>  request('kondektur'),
+            ]);
+
+            $update_jadwal_tiket->update([
+                'price'          => $data_price,
+                'departure_date' =>  request('departure_date'),
+                'departure_time' =>  request('departure_time'),
+                'id_bus'         =>  request('id_bus'),
+                'from_city'      =>  request('from_city'),
+                'to_city'        =>  request('to_city'),
+                'sopir_utama'    =>  request('sopir_utama'),
+                'sopir_bantu'    =>  request('sopir_bantu'),
+                'kondektur'      =>  request('kondektur'),
+            ]);
+
+            DB::commit();
             Session::flash('status', 'success');
             Session::flash('message', 'Data berhasil Diupdate!');
+            return redirect('admin/jadwal-tiket');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Session::flash('error', 'errors');
+            Session::flash(['message', 'Data gagal di update' . $e->getMessage()], 500);
+            return redirect('admin/jadwal-tiket');
         }
-        return redirect('admin/jadwal-tiket');
     }
 
-
-
-    public function delete($id)
+    public function destroy($id)
     {
         $bus_id = JadwalTiket::findOrFail($id);
-
         $kode  = $bus_id->departure_code;
 
-        Keberangkatan::where('departure_code', $kode)
-            ->delete();
+        $passenger = Keberangkatan::where('departure_code', $kode)
+            ->first();
 
-        TransaksiTiket::where('departure_code', $kode)
-            ->delete();
+        $total = $passenger->total_passenger;
 
-        $delete = JadwalTiket::findOrFail($id);
-        $delete->delete();
+        if ($total != null) {
+            return response()->json(['passenger' => 'Terdapat tiket yang telah terjual']);
+        } else {
+            try {
+                DB::beginTransaction();
 
-        if ($delete) {
-            Session::flash('status', 'success');
-            Session::flash('message', 'Data berhasil Dihapus!');
+                $bus_id->delete();
+
+                $passenger->delete();
+
+                DB::commit();
+                return response()->json(['success' => 'Data Berhasil di hapus']);
+            } catch (\Exception $e) {
+                DB::rollback();
+                return response()->json(['error' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
+            }
         }
-        return redirect('/admin/jadwal-tiket');
+        // if ($passenger) {
+        //     return response()->json(['passenger' => 'Terdapat tiket yang telah terjual']);
+        // } else {
+        //     try {
+        //         DB::beginTransaction();
+
+        //         $bus_id->delete();
+
+        //         $passenger->delete();
+
+        //         DB::commit();
+        //         return response()->json(['success' => 'Data Berhasil di hapus']);
+        //     } catch (\Exception $e) {
+        //         DB::rollback();
+        //         return response()->json(['error' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
+        //     }
+        // }
     }
 }

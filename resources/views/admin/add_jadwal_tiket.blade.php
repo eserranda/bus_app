@@ -1,9 +1,7 @@
 @extends('layouts.master')
-@section('title', 'Tambah Jadwal')
-@section('submenu', 'show')
+
 
 @section('content')
-
     <div class="col-xl-8 col-md-6">
         <div class="card">
             <form action="jadwal-tiket-save" class="row g-3 m-2" method="POST">
@@ -101,69 +99,68 @@
             </form>
         </div>
     </div>
+    @push('script')
+        <script>
+            $(document).ready(function() {
+                $('#id_bus').on('change', function() {
+                    var id_bus = $('#id_bus').val();
+                });
 
-    <script>
-        $(document).ready(function() {
-            $('#id_bus').on('change', function() {
-                var id_bus = $('#id_bus').val();
-            });
+                $('#from_city').on('change', function() {
+                    var from_city = $('#from_city').val();
+                    $.ajax({
+                        type: 'post',
+                        url: '/admin/toCity',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        data: {
+                            from_city: from_city
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            $('#to_city').empty();
+                            $('#to_city').append(
+                                '<option value=""  selected disabled>Kota Tujuan</option>');
+                            $.each(data, function(index, element) {
+                                $('#to_city').append('<option value="' + element.city +
+                                    '">' + element.city + '</option>');
+                            });
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            console.log(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                        }
+                    })
+                });
 
-            $('#from_city').on('change', function() {
-                var from_city = $('#from_city').val();
-                $.ajax({
-                    type: 'post',
-                    url: '/admin/toCity',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        from_city: from_city
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        $('#to_city').empty();
-                        $('#to_city').append(
-                            '<option value=""  selected disabled>Kota Tujuan</option>');
-                        $.each(data, function(index, element) {
-                            $('#to_city').append('<option value="' + element.city +
-                                '">' + element.city + '</option>');
-                        });
-                    },
-                    error: function(xhr, ajaxOptions, thrownError) {
-                        console.log(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                function formatRupiah(angka) {
+                    var number_string = angka.toString().replace(/[^,\d]/g, ''),
+                        split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
                     }
-                })
-            });
 
-            function formatRupiah(angka) {
-                var number_string = angka.toString().replace(/[^,\d]/g, ''),
-                    split = number_string.split(','),
-                    sisa = split[0].length % 3,
-                    rupiah = split[0].substr(0, sisa),
-                    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-                if (ribuan) {
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return rupiah;
                 }
 
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return rupiah;
-            }
+                $('#price').on('input', function() {
+                    $(this).val(function(index, value) {
+                        return formatRupiah(value.replace(/\D/g, ''));
+                    });
+                });
 
-            $('#price').on('input', function() {
-                $(this).val(function(index, value) {
-                    return formatRupiah(value.replace(/\D/g, ''));
+                $('#add').click(function() {
+                    var priceVal = $('#price').val();
+                    var numericPrice = priceVal.replace(/\D/g, '');
+                    $('#price').val(numericPrice);
                 });
             });
-
-            $('#add').click(function() {
-                var priceVal = $('#price').val();
-                var numericPrice = priceVal.replace(/\D/g, '');
-                $('#price').val(numericPrice);
-            });
-        });
-    </script>
-
-
+        </script>
+    @endpush
 @endsection

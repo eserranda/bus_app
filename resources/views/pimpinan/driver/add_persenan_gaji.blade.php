@@ -1,9 +1,21 @@
 @extends('layouts.master')
-@section('title', 'Tambah Data Persenan Driver')
 
+@section('title')
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <h2 class="page-title">
+                        Tambah Persenan Gaji Driver
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
 
 @section('content')
-
     <div class="col-xl-8 col-md-6">
         <div class="card">
             <form action="driver/persenan-save" class="row g-3 m-2" method="POST">
@@ -53,35 +65,36 @@
             </form>
         </div>
     </div>
-
-    <script>
-        $(document).ready(function() {
-            $('#from_city').on('change', function() {
-                var from_city = $('#from_city').val();
-                $.ajax({
-                    type: 'post',
-                    url: 'persenan-gaji-toCity',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        from_city: from_city
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        $('#to_city').empty();
-                        $('#to_city').append(
-                            '<option value=""  selected disabled>Kota Tujuan</option>');
-                        $.each(data, function(index, element) {
-                            $('#to_city').append('<option value="' + element.city +
-                                '">' + element.city + '</option>');
-                        });
-                    },
-                    error: function(xhr, ajaxOptions, thrownError) {
-                        console.log(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
-                    }
-                })
+    @push('script')
+        <script>
+            $(document).ready(function() {
+                $('#from_city').on('change', function() {
+                    var from_city = $('#from_city').val();
+                    $.ajax({
+                        type: 'post',
+                        url: 'persenan-gaji-toCity',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        data: {
+                            from_city: from_city
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            $('#to_city').empty();
+                            $('#to_city').append(
+                                '<option value=""  selected disabled>Kota Tujuan</option>');
+                            $.each(data, function(index, element) {
+                                $('#to_city').append('<option value="' + element.city +
+                                    '">' + element.city + '</option>');
+                            });
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            console.log(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+                        }
+                    })
+                });
             });
-        });
-    </script>
+        </script>
+    @endpush
 @endsection

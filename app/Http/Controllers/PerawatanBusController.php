@@ -241,7 +241,7 @@ class PerawatanBusController extends Controller
             return response()->json(['sukses' => 'Data Berhasil di simpan']);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['Gagal' => 'Terjadi Kesalahan'], 404);
+            return response()->json(['error' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
         }
 
         // $id = request('id');

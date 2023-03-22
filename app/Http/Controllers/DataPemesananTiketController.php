@@ -55,10 +55,11 @@ class DataPemesananTiketController extends Controller
                     // $nilai_status =  $data->status;
                     return [
                         'id'                     => $data->id,
+                        'departure_code'         => $data->departure_code,
                         'no_ticket'              => $data->no_ticket,
                         'date'                   => $data->date,
                         'rute'                   => $data->from_city . " - " . $data->to_city,
-                        'bus'                    => $data->bus_name->type,
+                        'bus'                    => $data->bus_name->type . " | " .  $data->bus_name->plat,
                         'customer_name'          => $data->customer_name,
                         'customers_phone_number' => $data->customers_phone_number,
                         'seats_number'           => $data->seats_number,
@@ -71,9 +72,9 @@ class DataPemesananTiketController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('opsi', function ($row) {
-                    $actionBtn = '<a class="btn btn-light text-danger btn-sm" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(1)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
-                    $actionBtn .= '<a class="btn btn-light btn-sm mx-1  text-info" href="/admin/pemesanan-tiket-info/' . $row['id'] . '"><i class="fa-solid fa-circle-info"></i></a>';
-                    $actionBtn .= '<a class="btn btn-sm btn-light text-primary" href="/admin/pemesanan-tiket-edit/' . $row['id'] . '"><i class="fa-solid fa-pen-to-square"></i></a>';
+                    $actionBtn = '<a class="btn btn-light text-danger btn-sm btn-icon" onclick="deleteData(\'' . $row['id'] . '\', $(this).closest(\'tr\').find(\'td:eq(1)\').text())"> <i class="fa-regular fa-trash-can"></i></a>';
+                    $actionBtn .= '<a class="btn btn-light btn-sm mx-1 btn-icon text-info" href="/admin/pemesanan-tiket-info/' . $row['id'] . '"><i class="fa-solid fa-circle-info"></i></a>';
+                    $actionBtn .= '<a class="btn btn-sm btn-light btn-icon" href="/admin/pemesanan-tiket-edit/' . $row['id'] . '"><i class="fa-solid fa-pen-to-square"></i></a>';
                     return $actionBtn;
                 })
                 ->rawColumns(['opsi', 'status'])

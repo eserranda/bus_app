@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bus;
 use Carbon\Carbon;
+use App\Models\Bus;
 use App\Models\Rute;
 use App\Models\Tiket;
 use App\Models\BusSeat;
@@ -12,6 +12,7 @@ use App\Models\JadwalTiket;
 use Illuminate\Http\Request;
 use App\Models\Keberangkatan;
 use App\Models\PemesananTiket;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
@@ -57,27 +58,24 @@ class PemesananTiketController extends Controller
 
     public function id_bus(Request $request)
     {
-        $kode = Keberangkatan::select('status')
+        // $kode = Keberangkatan::select('status')
+        //     ->where('to_city', request('to_city'))
+        //     ->where('from_city', request('from_city'))
+        //     ->where('departure_date', request('departure_date'))
+        //     ->where('status', 0) // ambil id bus yang statusnya masih null/0, true = bus belum berangkat/bus ready 
+        //     ->first();
+
+        $kode = JadwalTiket::select('id_bus', 'price', 'departure_code')
             ->where('to_city', request('to_city'))
             ->where('from_city', request('from_city'))
             ->where('departure_date', request('departure_date'))
-            ->where('status', true) // ambil id bus yang statusnya masih true, true = bus belum berangkat/bus ready 
-            ->first();
+            ->where('status', 0) // ambil id bus yang statusnya masih null/0, true = bus belum berangkat/bus ready 
+            ->distinct()
+            ->get();
 
         if ($kode) {
-
-            $status = $kode->status;
-
-            // if ($status == 0) {
-            $get_data = JadwalTiket::select('id_bus', 'price', 'departure_code')
-                ->where('to_city', request('to_city'))
-                ->where('from_city', request('from_city'))
-                ->where('departure_date', request('departure_date'))
-                ->distinct()
-                ->get();
-
             $bus_data = [];
-            foreach ($get_data as $data) {
+            foreach ($kode as $data) {
                 $bus_data[] = [
                     'id_bus'            => $data->bus->id,
                     'bus_name'          => $data->bus->type,
@@ -190,7 +188,7 @@ class PemesananTiketController extends Controller
             } else if ($paymet_method == 'transfer') {
                 $keterangan = false;
             }
-            $store = Tiket::create([
+            Tiket::create([
                 'no_ticket'              => $new_no_ticket,
                 'date'                   => request('date'),
                 'bus'                    => request('bus'),
@@ -227,10 +225,8 @@ class PemesananTiketController extends Controller
 
             $update_data->update([
                 'total_passenger' => $total_tiket,
-                'total_price' => $total_price
+                'total_price'     => $total_price
             ]);
-
-            // return redirect('admin/pemesanan-tiket');
 
             return response()->json(['success' => "Pembelian tiket berhasil"]);
         }
@@ -238,9 +234,9 @@ class PemesananTiketController extends Controller
 
     public function update(Request $request, $id)
     {
-        $get_data = Tiket::findOrFail($id);
-        $price = request('price');
-        $biaya_tambahan = request('biaya_tambahan');
+        $get_data = Tiket::find($id);
+        $price              = request('price');
+        $biaya_tambahan     = request('biaya_tambahan');
 
         if ($biaya_tambahan != null) {
             $total_price = $price + $biaya_tambahan;
@@ -290,6 +286,7 @@ class PemesananTiketController extends Controller
                 'payment_methods'        => request('payment_methods'),
             ]);
 
+
             $total_tiket = Tiket::where('departure_code', request('departure_code'))
                 ->sum('total_seats');
 
@@ -301,7 +298,21 @@ class PemesananTiketController extends Controller
 
             $update_data->update([
                 'total_passenger' => $total_tiket,
-                'total_price' => $total_price
+                'total_price'     => $total_price
+            ]);
+
+            $update_old_dcode = Keberangkatan::where('departure_code', request('old_departure_code'))
+                ->first();
+
+            $new_total_passenger = Tiket::where('departure_code', request('old_departure_code'))
+                ->sum('total_seats');
+
+            $new_total_price = Tiket::where('departure_code', request('old_departure_code'))
+                ->sum('price');
+
+            $update_old_dcode->update([
+                'total_passenger' => $new_total_passenger,
+                'total_price'     => $new_total_price
             ]);
 
             return response()->json(['success' => "Update tiket berhasil"]);

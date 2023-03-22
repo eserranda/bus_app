@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JadwalTiket;
 use Carbon\Carbon;
 use App\Models\Tiket;
-use App\Models\JadwalTiket;
 use Illuminate\Http\Request;
 use App\Models\Keberangkatan;
 use App\Models\LaporanKeuangan;
@@ -30,7 +30,7 @@ class KeberangkatanController extends Controller
             // hari ini
             $today = Carbon::now()->toDateString();
 
-            $query = Keberangkatan::select('id', 'departure_code', 'from_city', 'to_city', 'id_bus', 'departure_date', 'departure_time', 'sopir_utama', 'sopir_bantu', 'kondektur', 'total_passenger', 'total_price', 'status')
+            $query = Keberangkatan::select('*')
                 ->orderBy('departure_date', 'asc');
 
             if (isset($status)) {
@@ -43,7 +43,8 @@ class KeberangkatanController extends Controller
             } elseif (isset($start_date) && isset($end_date)) {
                 $query->whereBetween('departure_date', [$start_date, $end_date]);
             } else {
-                $query->where('departure_date', $today);
+                $query->where('departure_date', $today)
+                    ->orderBy('status', 'ASC');
             }
             $data = $query->get()
                 ->map(function ($data) {
@@ -62,13 +63,13 @@ class KeberangkatanController extends Controller
                             $status = '<span class="badge text-bg-warning">Arsip</span>';
                             break;
                         default:
-                            $status = '<span class="badge text-bg-Warning">Arsip</span>';
+                            $status = ' - ';
                             break;
                     }
                     $nilai_status =  $data->status;
                     return [
                         'id'              => $data->id,
-                        'departure_date'  => $data->departure_date,
+                        'departure_date'  => $data->departure_date . " / " . $data->departure_time,
                         'rute'            => $data->from_city . " - " . $data->to_city,
                         'bus'             => $data->bus->type . " | " . $data->bus->plat,
                         'id_driver'       => $data->sopirUtama->fullname . " / " .  $data->sopirBantu->fullname,
@@ -83,17 +84,17 @@ class KeberangkatanController extends Controller
                 ->addIndexColumn()
                 ->addColumn('opsi', function ($row) {
                     if ($row['nilai_status'] == 0) {
-                        $actionBtn = ' <a class="btn btn-info btn-sm  border-0" href="/admin/keberangkatan-setberangkat/' . $row['id'] . '">Berangkat</a>';
-                        $actionBtn .= '<a class="btn border-0 btn-secondary btn-sm d-inline-block"
+                        $actionBtn = ' <a class="btn btn-info" href="/admin/keberangkatan-setberangkat/' . $row['id'] . '">Berangkat</a>';
+                        $actionBtn .= '<a class="btn btn-secondary mx-1"
                         onclick="printManifest(\'' . $row['id'] . '\')">  <i class="fa-solid fa-print"></i> Manifest  </a>';
                         return $actionBtn;
                     } elseif ($row['nilai_status'] == 1) {
-                        $actionBtn = '<a class="btn border-0 btn-sm btn-primary" href="/admin/keberangkatan-rollback/' . $row['id'] . '"> <i class="fa-solid fa-arrow-rotate-left"></i></a>';
-                        $actionBtn .= '<a class="btn border-0 btn-secondary btn-sm d-inline-block"
+                        $actionBtn = '<a class="btn btn-primary btn-icon" href="/admin/keberangkatan-rollback/' . $row['id'] . '"> <i class="fa-solid fa-arrow-rotate-left"></i></a>';
+                        $actionBtn .= '<a class="btn btn-secondary "
                         onclick="printManifest(\'' . $row['id'] . '\')">  <i class="fa-solid fa-print"></i> Manifest  </a>';
                         return $actionBtn;
                     } else {
-                        $actionBtn = '<a class="btn border-0 btn-secondary btn-sm d-inline-block"
+                        $actionBtn = '<a class="btn btn-secondary"
                         onclick="printManifest(\'' . $row['id'] . '\')">  <i class="fa-solid fa-print"></i> Manifest  </a>';
                         return $actionBtn;
                     }
@@ -104,60 +105,22 @@ class KeberangkatanController extends Controller
         return view('admin.data_keberangkatan');
     }
 
-    // {
-    // $today = Carbon::today();
-    // $keberangkatan = Keberangkatan::whereDate('departure_date', '=', $today)
-    //     ->orderBy('departure_date', 'asc')
-    //     // ->with('bus')
-    //     // ->with('sopirUtama')
-    //     // ->with('sopirBantu')
-    //     // ->with('Kondektur')
-    //     ->get()
-    //     ->map(function ($jadwal) {
-    //         $jadwal->departure_date = Carbon::createFromFormat('Y-m-d', $jadwal->departure_date)->format('d-m-Y');
-    //         $jadwal->price = 'Rp ' . number_format($jadwal->price, 0, ',', '.');
-    //         return $jadwal;
-    //     });
-
-    // $departure_date = Carbon::now()->format('d-m-Y');
-
-    // return view('admin.data_keberangkatan', ['listKeberangkatan' => $keberangkatan, 'departure_date' => $departure_date]);
-    // }
-
     public function SetBerangkat(Request $request, $id)
     {
-        $Setberangkat = Keberangkatan::findOrFail($id);
+        $set_berangkat = Keberangkatan::findOrFail($id);
+        $departure_code = $set_berangkat->departure_code;
 
-        $Setberangkat->update([
+        $data_jadwal = JadwalTiket::where('departure_code', $departure_code);
+
+        $data_jadwal->update([
             'status' => 1,
         ]);
 
-        // $id_bus     = $Setberangkat->id_bus;
-        // $kode       = $Setberangkat->departure_code;
-        // $InputDate  = $Setberangkat->departure_date;
-        // $fromCity   = $Setberangkat->from_city;
-        // $toCity     = $Setberangkat->to_city;
+        $set_berangkat->update([
+            'status' => 1,
+        ]);
 
-        // $total_tiket = Tiket::where('date', $InputDate)
-        //     ->where('from_city', $fromCity)
-        //     ->where('to_city', $toCity)
-        //     ->where('bus', $id_bus)
-        //     ->sum('price');
-
-        // $total_saldo = LaporanKeuangan::latest('created_at')->first();
-
-        // $credit = $total_saldo->total_dana + $total_tiket;
-
-        // LaporanKeuangan::create([
-        //     'date'           =>  $InputDate,
-        //     'kode_transaksi' =>  $kode,
-        //     'keterangan'     =>  "Rute $fromCity - $toCity",
-        //     'credit'         =>  $total_tiket,
-        //     'total_dana'     =>  $credit
-        // ]);
-
-
-        if ($Setberangkat) {
+        if ($set_berangkat) {
             Session::flash('status', 'success');
             Session::flash('message', 'Data berhasil Diupdate!');
         }
@@ -167,6 +130,14 @@ class KeberangkatanController extends Controller
     public function Rollback(Request $request, $id)
     {
         $rollback = Keberangkatan::findOrFail($id);
+
+        $departure_code = $rollback->departure_code;
+
+        $data_jadwal = JadwalTiket::where('departure_code', $departure_code);
+
+        $data_jadwal->update([
+            'status' => 0,
+        ]);
 
         $rollback->update([
             'status' => 0,
@@ -189,6 +160,7 @@ class KeberangkatanController extends Controller
 
         $tiket = Tiket::where('departure_code', $departure_code)
             ->get();
+
         $firstTiket = $tiket->first();
 
         $date = Carbon::createFromFormat('Y-m-d', $firstTiket->date);
@@ -204,7 +176,6 @@ class KeberangkatanController extends Controller
             'total_passenger'   => $total_passenger,
             'time'              => $departure_time
         ];
-
         return response()->json(['data' => $tiket, 'rute' => $data]);
     }
 
@@ -230,7 +201,6 @@ class KeberangkatanController extends Controller
                     'status'          => $mydata->status,
                 ];
             }
-
             return response()->json($response);
         } else {
             return response()->json(404);
@@ -248,6 +218,9 @@ class KeberangkatanController extends Controller
         $toCity       = $get_data->to_city;
         $total_price  = $get_data->total_price;
 
+        $data_jadwal = JadwalTiket::where('departure_code', $kode);
+
+        $dateformat = Carbon::createFromFormat('Y-m-d', $get_data->departure_date)->format('d-m-Y');
         $total_saldo = LaporanKeuangan::latest()->first();
 
         if ($total_saldo != null) {
@@ -261,18 +234,23 @@ class KeberangkatanController extends Controller
             LaporanKeuangan::create([
                 'date'           =>  $InputDate,
                 'kode_transaksi' =>  $kode,
-                'keterangan'     =>  "Rute $fromCity - $toCity Tanggal $InputDate",
+                'keterangan'     =>  "Rute $fromCity - $toCity, Tanggal $dateformat",
                 'credit'         =>  $total_price,
                 'total_dana'     =>  $credit
             ]);
             $get_data->update([
                 'status' => 3,
             ]);
+
+            $data_jadwal->update([
+                'status' => 3,
+            ]);
+
             DB::commit();
             return response()->json(['sukses' => 'Data Berhasil di simpan']);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['Gagal' => 'Terjadi Kesalahan'], 404);
+            return response()->json(['error' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
         }
     }
 }

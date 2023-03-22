@@ -1,6 +1,6 @@
 @extends('layouts.master')
-@section('title', 'Edit Driver')
-@section('submenu', 'show')
+{{-- @section('title', 'Edit Driver')
+@section('submenu', 'show') --}}
 
 @section('content')
     <div class="col-xl-8 col-md-6">

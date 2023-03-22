@@ -1,9 +1,6 @@
 @extends('layouts.master')
-@section('title', 'Gaji Karyawan')
-@section('submenu', 'show')
 
 @section('content')
-
     <div class="col-xl-8 col-md-12">
         <div class="card">
             <form action="/pimpinan/gaji-karyawan-save" class="row g-2 m-2" method="POST">
@@ -63,96 +60,97 @@
         </div>
     </div>
 
+    @push('script')
+        <script>
+            function formatRupiah(angka) {
+                var isNegative = false;
+                if (angka < 0) {
+                    isNegative = true;
+                    angka = Math.abs(angka);
+                }
 
-    <script>
-        function formatRupiah(angka) {
-            var isNegative = false;
-            if (angka < 0) {
-                isNegative = true;
-                angka = Math.abs(angka);
+                var number_string = angka.toString().replace(/[^,\d]/g, ''),
+                    split = number_string.split(','),
+                    sisa = split[0].length % 3,
+                    rupiah = split[0].substr(0, sisa),
+                    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                if (ribuan) {
+                    separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+
+                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+
+                if (isNegative) {
+                    rupiah = '-' + rupiah;
+                }
+
+                return rupiah;
             }
 
-            var number_string = angka.toString().replace(/[^,\d]/g, ''),
-                split = number_string.split(','),
-                sisa = split[0].length % 3,
-                rupiah = split[0].substr(0, sisa),
-                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-            if (ribuan) {
-                separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
-            }
+            $(document).ready(function(e) {
+                // fungsi untuk menghapus semua karakter selain angka
+                function removeNonNumeric(str) {
+                    return str.replace(/\D/g, '');
+                }
 
-            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                // mendefinisikan variabel-variabel yang diperlukan
+                var gaji_pokok = 0;
+                var bonus = 0;
+                var potongan = 0;
 
-            if (isNegative) {
-                rupiah = '-' + rupiah;
-            }
-
-            return rupiah;
-        }
-
-
-        $(document).ready(function(e) {
-            // fungsi untuk menghapus semua karakter selain angka
-            function removeNonNumeric(str) {
-                return str.replace(/\D/g, '');
-            }
-
-            // mendefinisikan variabel-variabel yang diperlukan
-            var gaji_pokok = 0;
-            var bonus = 0;
-            var potongan = 0;
-
-            // mengambil input dari pengguna dan memprosesnya
-            $('#gaji_pokok').on('input', function() {
-                var value = removeNonNumeric($(this).val());
-                gaji_pokok = parseInt(value);
-                $(this).val(formatRupiah(value));
-                updateTotalGaji();
-            });
-
-            $('#bonus').on('input', function() {
-                var value = removeNonNumeric($(this).val());
-                bonus = parseInt(value);
-                $(this).val(formatRupiah(value));
-                updateTotalGaji();
-            });
-
-            $('#potongan').on('input', function() {
-                var value = removeNonNumeric($(this).val());
-                potongan = parseInt(value);
-                $(this).val(formatRupiah(value));
-                updateTotalGaji();
-            });
-
-            // memperbarui nilai total gaji
-            function updateTotalGaji() {
-                var total_gaji = gaji_pokok + bonus - potongan;
-                $('#total_gaji').val(formatRupiah(total_gaji.toString()));
-            }
-
-            $('#save').click(function() {
-                $('input[type="text"]').each(function() {
-                    var value = $(this).val().replace(/[^\d-]/g, '');
-                    $(this).val(value);
+                // mengambil input dari pengguna dan memprosesnya
+                $('#gaji_pokok').on('input', function() {
+                    var value = removeNonNumeric($(this).val());
+                    gaji_pokok = parseInt(value);
+                    $(this).val(formatRupiah(value));
+                    updateTotalGaji();
                 });
-            });
 
-            // $('#save').click(function() {
-            //     var gaji_pokok = $('#gaji_pokok').val();
-            //     var bonus = $('#bonus').val();
-            //     var potongan = $('#potongan').val();
-            //     var total = $('#total_gaji').val();
-            //     var numeric_gaji_pokok = gaji_pokok.replace(/\D/g, '');
-            //     var numeric_bonus = bonus.replace(/\D/g, '');
-            //     var numeric_potongan = potongan.replace(/\D/g, '');
-            //     var numeric_total = total.replace(/[^\d-]/g, '');
-            //     $('#gaji_pokok').val(numeric_gaji_pokok);
-            //     $('#bonus').val(numeric_bonus);
-            //     $('#potongan').val(numeric_potongan);
-            //     $('#total_gaji').val(numeric_total);
-            // });
-        });
-    </script>
+                $('#bonus').on('input', function() {
+                    var value = removeNonNumeric($(this).val());
+                    bonus = parseInt(value);
+                    $(this).val(formatRupiah(value));
+                    updateTotalGaji();
+                });
+
+                $('#potongan').on('input', function() {
+                    var value = removeNonNumeric($(this).val());
+                    potongan = parseInt(value);
+                    $(this).val(formatRupiah(value));
+                    updateTotalGaji();
+                });
+
+                // memperbarui nilai total gaji
+                function updateTotalGaji() {
+                    var total_gaji = gaji_pokok + bonus - potongan;
+                    $('#total_gaji').val(formatRupiah(total_gaji.toString()));
+                }
+
+                $('#save').click(function() {
+                    $('input[type="text"]').each(function() {
+                        var value = $(this).val().replace(/[^\d-]/g, '');
+                        $(this).val(value);
+                    });
+                });
+
+                // $('#save').click(function() {
+                //     var gaji_pokok = $('#gaji_pokok').val();
+                //     var bonus = $('#bonus').val();
+                //     var potongan = $('#potongan').val();
+                //     var total = $('#total_gaji').val();
+                //     var numeric_gaji_pokok = gaji_pokok.replace(/\D/g, '');
+                //     var numeric_bonus = bonus.replace(/\D/g, '');
+                //     var numeric_potongan = potongan.replace(/\D/g, '');
+                //     var numeric_total = total.replace(/[^\d-]/g, '');
+                //     $('#gaji_pokok').val(numeric_gaji_pokok);
+                //     $('#bonus').val(numeric_bonus);
+                //     $('#potongan').val(numeric_potongan);
+                //     $('#total_gaji').val(numeric_total);
+                // });
+            });
+        </script>
+    @endpush
 @endsection

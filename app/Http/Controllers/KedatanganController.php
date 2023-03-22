@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GajiDriver;
 use Carbon\Carbon;
 use App\Models\Tiket;
+use App\Models\GajiDriver;
+use App\Models\JadwalTiket;
+use App\Models\PersenanGaji;
 use Illuminate\Http\Request;
 use App\Models\Keberangkatan;
 use App\Models\LaporanKeuangan;
-use App\Models\PersenanGaji;
-use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Session;
 
 
 class KedatanganController extends Controller
@@ -31,8 +32,8 @@ class KedatanganController extends Controller
             // hari ini
             $today = Carbon::now()->toDateString();
 
-            $query = Keberangkatan::select('id', 'departure_code', 'from_city', 'to_city', 'id_bus', 'departure_date', 'departure_time', 'sopir_utama', 'sopir_bantu', 'kondektur', 'total_passenger', 'total_price', 'status')
-                ->orderBy('departure_date', 'asc');
+            $query = Keberangkatan::select('*')
+                ->orderBy('status', 'asc');
 
             if (isset($status)) {
                 if ($status === 'all_data') {
@@ -84,10 +85,10 @@ class KedatanganController extends Controller
                 ->addIndexColumn()
                 ->addColumn('opsi', function ($row) {
                     if ($row['nilai_status'] == 1) {
-                        $actionBtn = ' <a class="btn border-0 btn-sm btn-info" href="/admin/kedatangan-tiba/ ' . $row['id'] . '">Tiba</a>';
+                        $actionBtn = ' <a class="btn  btn-info" href="/admin/kedatangan-tiba/ ' . $row['id'] . '">Tiba</a>';
                         return $actionBtn;
                     } elseif ($row['nilai_status'] == 2) {
-                        $actionBtn = '<a class="btn btn-light text-primary btn-sm financial-save"  onclick="financial_save(\'' . $row['id'] . '\')"><i  class="fa-solid fa-file-medical"></i></a>';
+                        $actionBtn = '<a class="btn btn-icon text-primary financial-save"  onclick="financial_save(\'' . $row['id'] . '\')"><i  class="fa-solid fa-file-medical"></i></a>';
                         return $actionBtn;
                     } elseif ($row['nilai_status'] == null) {
                         $actionBtn =  '';
@@ -114,43 +115,41 @@ class KedatanganController extends Controller
     public function SetTiba(Request $request, $id)
     {
         $keberangkatan = Keberangkatan::findOrFail($id);
+
+        $departure_code = $keberangkatan->departure_code;
+
+        $data_jadwal = JadwalTiket::where('departure_code', $departure_code);
+
+        $data_jadwal->update([
+            'status' => 2,
+        ]);
+
         $keberangkatan->update([
             'status' => 2,
         ]);
 
-        $id_bus     = $keberangkatan->id_bus;
         // $kode       = $keberangkatan->departure_code;
-        $InputDate  = $keberangkatan->departure_date;
-        $sopirUtama = $keberangkatan->sopir_utama;
-        $sopirBantu = $keberangkatan->sopir_bantu;
-        $fromCity   = $keberangkatan->from_city;
-        $toCity     = $keberangkatan->to_city;
+        // $id_bus      = $keberangkatan->id_bus;
+        $InputDate   = $keberangkatan->departure_date;
+        $sopirUtama  = $keberangkatan->sopir_utama;
+        $sopirBantu  = $keberangkatan->sopir_bantu;
+        $fromCity    = $keberangkatan->from_city;
+        $toCity      = $keberangkatan->to_city;
+        $total_tiket = $keberangkatan->total_price;
 
-        $total_tiket = Tiket::where('date', $InputDate)
-            ->where('from_city', $fromCity)
-            ->where('to_city', $toCity)
-            ->where('bus', $id_bus)
-            ->sum('price');
-
-        // $total_saldo = LaporanKeuangan::latest('created_at')->first();
-
-        // $credit = $total_saldo->total_dana + $total_tiket;
-
-        // LaporanKeuangan::create([
-        //     'date'           =>  $InputDate,
-        //     'kode_transaksi' =>  $kode,
-        //     'keterangan'     =>  "Rute $fromCity - $toCity",
-        //     'credit'         =>  $total_tiket,
-        //     'total_dana'     =>  $credit
-        // ]);
+        // $total_tiket = Tiket::where('date', $InputDate)
+        //     ->where('from_city', $fromCity)
+        //     ->where('to_city', $toCity)
+        //     ->where('bus', $id_bus)
+        //     ->sum('price');
 
         $persenan = PersenanGaji::select('sopir_utama', 'sopir_bantu')
             ->where('from_city', $fromCity)
             ->where('to_city', $toCity)
             ->first();
 
-        $persenanSopirUtama = $persenan->sopir_utama;
-        $persenanSopirBantu = $persenan->sopir_bantu;
+        $persenanSopirUtama  = $persenan->sopir_utama;
+        $persenanSopirBantu  = $persenan->sopir_bantu;
 
         $GajisopirUtama      = $persenanSopirUtama / 100;
         $totalGajiSopirUtama = $total_tiket * $GajisopirUtama;
@@ -165,7 +164,7 @@ class KedatanganController extends Controller
                 ->where('from_city', $fromCity)
                 ->first();
 
-            if (!$gajiDriver) {
+            if (!$gajiDriver) { //jika tidak ada yang sama di temukan, atau nilainya Null
 
                 $latestData = GajiDriver::latest('kode_gaji')->first();
 
@@ -184,25 +183,27 @@ class KedatanganController extends Controller
                 }
 
                 GajiDriver::create([
-                    'id_driver'   =>  $sopirUtama,
-                    'kode_gaji'   =>  $kode_sopir_utama,
-                    'to_city'     =>  $toCity,
-                    'from_city'   =>  $fromCity,
-                    'date'        =>  $InputDate,
-                    'salary'      =>  $totalGajiSopirUtama,
-                    'driver_type' =>  $sopirUtama,
+                    'id_driver'      =>  $sopirUtama,
+                    'departure_code' =>  $departure_code,
+                    'kode_gaji'      =>  $kode_sopir_utama,
+                    'to_city'        =>  $toCity,
+                    'from_city'      =>  $fromCity,
+                    'date'           =>  $InputDate,
+                    'salary'         =>  $totalGajiSopirUtama,
+                    'driver_type'    =>  $sopirUtama,
                 ]);
             }
         }
 
         if ($sopirBantu) {
             $gajiDriver = GajiDriver::where('id_driver', $sopirBantu)
-                ->where('date', $InputDate)
-                ->where('to_city', $toCity)
-                ->where('from_city', $fromCity)
+                ->where('departure_code', $departure_code)
+                // ->where('date', $InputDate)
+                // ->where('to_city', $toCity)
+                // ->where('from_city', $fromCity)
                 ->first();
 
-            if (!$gajiDriver) {
+            if (!$gajiDriver) {  //jika tidak ada yang sama di temukan, atau nilainya Null
 
                 $latestData = GajiDriver::latest('kode_gaji')->first();
 
@@ -217,18 +218,16 @@ class KedatanganController extends Controller
                     }
                     $kode_supir_bantu = $code . '-' . str_pad($num, 3, '0', STR_PAD_LEFT);
                 }
-                // else {
-                //     $kode_supir_bantu = "PGDB-001";
-                // }
 
                 GajiDriver::create([
-                    'id_driver'   =>  $sopirBantu,
-                    'kode_gaji'   =>  $kode_supir_bantu,
-                    'to_city'     =>  $toCity,
-                    'from_city'   =>  $fromCity,
-                    'date'        =>  $InputDate,
-                    'salary'      =>  $totalGajiSopirBantu,
-                    'driver_type' =>  $sopirBantu,
+                    'id_driver'      =>  $sopirBantu,
+                    'kode_gaji'      =>  $kode_supir_bantu,
+                    'departure_code' =>  $departure_code,
+                    'to_city'        =>  $toCity,
+                    'from_city'      =>  $fromCity,
+                    'date'           =>  $InputDate,
+                    'salary'         =>  $totalGajiSopirBantu,
+                    'driver_type'    =>  $sopirBantu,
                 ]);
             }
         }

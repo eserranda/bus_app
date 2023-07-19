@@ -101,7 +101,7 @@ class DataKaryawanController extends Controller
 
         if ($update) {
             Session::flash('status', 'success');
-        }else{
+        } else {
             Session::flash('error', 'error');
         }
 
@@ -109,7 +109,7 @@ class DataKaryawanController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage. 
      */
     public function destroy(DataKaryawan $dataKaryawan, $id)
     {

@@ -1,6 +1,4 @@
-@extends('layouts.master')
-
-{{-- @section('submenu', 'show') --}}
+@extends('pimpinan.dashboard.index')
 
 @section('content')
     <div class="row">

@@ -52,7 +52,7 @@
 
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary mb-1"><i class="fa-solid fa-plus"></i> Tambah</button>
-                    <a href="/admin/data-driver" class="btn btn-warning mb-1"><i class="fa-solid fa-angles-left"></i>
+                    <a href="/pimpinan/data-driver" class="btn btn-warning mb-1"><i class="fa-solid fa-angles-left"></i>
                         Kembali</a>
 
                 </div>

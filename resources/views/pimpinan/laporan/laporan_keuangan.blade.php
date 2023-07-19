@@ -40,7 +40,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-                <tfoot>
+                {{-- <tfoot>
                     <tr>
                         <th colspan="4" style="text-align:right">Total:</th>
                         <th>{{ $TotalDebet }}</th>
@@ -54,7 +54,7 @@
                         <th colspan="6" style="text-align:right">Saldo Per/Tgl {{ $DateToday }}:</th>
                         <th>{{ $Total }}</th>
                     </tr>
-                </tfoot>
+                </tfoot> --}}
             </table>
         </div>
     </div>

@@ -36,6 +36,7 @@ class BusController extends Controller
     {
         $driver = Bus::findOrFail($id);
         $driver->update($request->all());
+
         if ($driver) {
             Session::flash('status', 'success');
             Session::flash('message', 'Data berhasil Diupdate!');

@@ -26,6 +26,9 @@ use App\Http\Controllers\PemesananTiketController;
 use App\Http\Controllers\TransaksiTiketController;
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\DataPemesananTiketController;
+use App\Http\Controllers\DataUserController;
+use App\Http\Controllers\PimpinanController;
+use App\Http\Controllers\SesiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,12 +61,31 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/login', [SesiController::class, 'index']);
+Route::POST('/login', [SesiController::class, 'login']);
+Route::get('/logout', [SesiController::class, 'logout']);
+
+
+
+Route::controller(PimpinanController::class)->group(function () {
+    Route::get('pimpinan', 'index');
+});
+
+
+// Route::controller(SesiController::class)->group(function () {
+//     Route::get('pimpinan/chart', 'index')->name('index.data.chart');
+//     Route::get('pimpinan/chartDataBar', 'chartDataBar')->name('chart.chartDataBar');
+//     Route::get('pimpinan/chartDataLine', 'chartDataLine')->name('chart.chartDataLine');
+// });
+
 // pimpinan Zone
-Route::controller(ChartController::class)->group(function () {
+
+Route::controller(ChartController::class)->middleware(['auth'])->group(function () {
     Route::get('pimpinan/chart', 'index')->name('index.data.chart');
     Route::get('pimpinan/chartDataBar', 'chartDataBar')->name('chart.chartDataBar');
     Route::get('pimpinan/chartDataLine', 'chartDataLine')->name('chart.chartDataLine');
 });
+
 
 Route::controller(DriverController::class)->group(function () {
     Route::get('pimpinan/data-driver', 'index')->name('index.data.drivers');
@@ -74,13 +96,22 @@ Route::controller(DriverController::class)->group(function () {
     Route::delete('pimpinan/driver-delete/{id}', 'delete');
 });
 
+Route::controller(DataUserController::class)->group(function () {
+    Route::get('pimpinan/data-user', 'index')->name('index.data.user');
+    // Route::get('pimpinan/add-data-karyawan', 'create');
+    Route::post('pimpinan/data-karyawan-save', 'store');
+    // Route::get('pimpinan/data-karyawan-edit/{id}', 'edit');
+    // Route::put('pimpinan/data-karyawan-update/{id}', 'update');
+    Route::delete('pimpinan/data-user-delete/{id}', 'destroy')->name('user_delete_data');
+});
+
 Route::controller(DataKaryawanController::class)->group(function () {
     Route::get('pimpinan/data-karyawan', 'index')->name('index.data.karyawan');
     Route::get('pimpinan/add-data-karyawan', 'create');
-    Route::post('pimpinan/data-karyawan-save', 'store');
+    // Route::post('pimpinan/data-karyawan-save', 'store');
     Route::get('pimpinan/data-karyawan-edit/{id}', 'edit');
     Route::put('pimpinan/data-karyawan-update/{id}', 'update');
-    Route::delete('pimpinan/data-karyawan-delete/{id}', 'destroy')->name('bbm_delete_data');
+    // Route::delete('pimpinan/data-karyawan-delete/{id}', 'destroy')->name('bbm_delete_data');
 });
 
 Route::controller(BbmController::class)->group(function () {

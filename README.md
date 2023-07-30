@@ -7,6 +7,17 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Deskripsi Projek
+Sistem ini mencakup fitur-fitur pemesanan tiket, manajemen pendapatan dan pengeluaran bulanan, penggajian karyawan, informasi harga tiket, serta informasi lengkap mengenai tujuan keberangkatan dan tujuan bus yang tersedia.
+
+Fitur Utama:
+- Pemesanan Tiket: Pengguna dapat melakukan pemesanan tiket bus secara online dengan memilih tujuan keberangkatan dan tujuan bus, serta tanggal keberangkatan.
+- Manajemen Pendapatan dan Pengeluaran: Sistem akan mencatat secara otomatis pendapatan dari pemesanan tiket dan mencatat pengeluaran bulanan untuk biaya operasional bus.
+- Penggajian Karyawan: Sistem akan menghitung dan mencatat gaji karyawan berdasarkan informasi absensi dan tingkat upah.
+- Informasi Harga Tiket: Pengguna dapat melihat harga tiket untuk berbagai rute dan tipe bus yang tersedia.
+- Informasi Tujuan Keberangkatan dan Tujuan Bus: Pengguna dapat menelusuri informasi lengkap mengenai tujuan keberangkatan dan tujuan bus yang disediakan oleh layanan ini.
+- Manajemen Biaya Operasional Bus: Pimpinan dapat memonitor dan mengelola biaya operasional bus, seperti biaya bahan bakar, perawatan, dan lain-lain.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
